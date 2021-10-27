@@ -1,17 +1,23 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
+import uarr from './images/uarr.png';
+import rarr from './images/rarr.png';
+import darr from './images/darr.png';
+import larr from './images/larr.png';
+
 
 function App() {
   const numberOfArrows = 10;
   const ARROWS = {
-    38: '\u2191', 
-    39: '\u2192', 
-    40: '\u2193', 
-    37: '\u2190',
+    38: uarr, 
+    39: rarr, 
+    40: darr, 
+    37: larr,
   };
 
   const [arrows, setArrows] = useState([]);
   const [position, setPosition] = useState(0);
+  const [score, setScore] = useState(0);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -32,6 +38,11 @@ function App() {
     positionRef.current = data;
     setPosition(data);
   };
+  const scoreRef = useRef(score);
+  const setNewscoreState = (data) => {
+    scoreRef.current = data;
+    setScore(data);
+  };
 
   const generateArrows = () => {
     const newArrows = []
@@ -48,9 +59,14 @@ function App() {
     //left arrow key code: 37
     if (![38, 39, 40, 37].includes(event.keyCode)) return;
     const keyToArrow = ARROWS[event.keyCode];
-    if (arrowsRef.current.length === 0 || (positionRef.current === (numberOfArrows - 1) && arrowsRef.current[positionRef.current] === keyToArrow)) {
+    const doneRow = (positionRef.current === (numberOfArrows - 1) && arrowsRef.current[positionRef.current] === keyToArrow);
+    if (arrowsRef.current.length === 0 || doneRow) {
+      //either starting the game or has finished a row
+      if (doneRow) {
+        setNewPositionState(0);
+        setNewscoreState(scoreRef.current + 10);
+      }
       generateArrows();
-      setNewPositionState(0);
       return;
     }
     if (arrowsRef.current[positionRef.current] === keyToArrow) {
@@ -59,17 +75,24 @@ function App() {
     } else {
       setNewPositionState(0);
     }
-    console.log(positionRef.current)
   };
 
   return (
     <div className="App">
-      <div>
-        Press any arrow key to start!
-      </div>
-      <div>
+      {arrows.length === 0 ? 
+        (
+          <div>
+            Press any arrow key to start!
+          </div>
+        ) : (
+          <div>
+            Score: {score}
+          </div>
+        )
+    }
+      <div className="Container">
         {arrows.map((arrow, index) => (
-          <span key={index} style={{display: position > index ? 'none' : ''}}>{arrow}</span>
+          <img key={index} src={arrow} alt="arrow" style={{visibility: position > index ? 'hidden' : '', height: 'auto', width: '100px', marginRight: '10px'}} />
         ))}
       </div>
     </div>
