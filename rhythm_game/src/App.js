@@ -21,8 +21,6 @@ function App() {
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
-
-    // cleanup this component
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
@@ -45,18 +43,18 @@ function App() {
   };
 
   const generateArrows = () => {
-    const newArrows = []
+    const newArrows = [];
     for (let i = 0; i < numberOfArrows ; i++) {
-      newArrows.push(ARROWS[Math.floor(Math.random() * (40 - 37 + 1) + 37)])
+      newArrows.push(ARROWS[Math.floor(Math.random() * (40 - 37 + 1) + 37)]);
     }
     setNewArrowsState(newArrows);
   }
 
   const handleKeyDown = (event) => {
-    //up arrow key code: 38
-    //right arrow key code: 39
-    //down arrow key code: 40
-    //left arrow key code: 37
+    // up arrow key code: 38
+    // right arrow key code: 39
+    // down arrow key code: 40
+    // left arrow key code: 37
     if (![38, 39, 40, 37].includes(event.keyCode)) return;
     const keyToArrow = ARROWS[event.keyCode];
     const doneRow = (positionRef.current === (numberOfArrows - 1) && arrowsRef.current[positionRef.current] === keyToArrow);
@@ -79,8 +77,8 @@ function App() {
 
   return (
     <div className="App">
-      {arrows.length === 0 ? 
-        (
+      <div className='Content'>
+        {arrows.length === 0 ? (
           <div>
             Press any arrow key to start!
           </div>
@@ -88,11 +86,24 @@ function App() {
           <div>
             Score: {score}
           </div>
-        )
-    }
+        )}
+      </div>
       <div className="Container">
         {arrows.map((arrow, index) => (
-          <img key={index} src={arrow} alt="arrow" style={{visibility: position > index ? 'hidden' : '', height: 'auto', width: '100px', marginRight: '10px'}} />
+          <img 
+            key={index}
+            src={arrow}
+            alt="arrow"
+            style={{
+              height: 'auto', 
+              width: '100px', 
+              marginRight: '10px', 
+              visibility: position > index ? 'hidden' : '', 
+              opacity: position > index ? 0 : '', 
+              transition: position > index ? 'transform 0.25s, visibility 0s 0.25s, opacity 0.25s linear' : '',
+              transform: position > index ? 'scale(1.5)' : ''
+            }} 
+          />
         ))}
       </div>
     </div>
@@ -100,12 +111,3 @@ function App() {
 }
 
 export default App;
-
-/*
-- press any key to start
-- on handle key function we need to 
-  - generate arrows if they are starting OR they get the last arrow correct
-  - need to check if their key press matches the arrow
-    - if match then go to next arrow
-    - if no match, restart the row
-*/
