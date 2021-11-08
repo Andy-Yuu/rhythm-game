@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useStopwatch } from 'react-timer-hook';
 import './App.css';
 import uarr from './images/uarr.png';
 import rarr from './images/rarr.png';
@@ -7,6 +8,7 @@ import larr from './images/larr.png';
 
 
 function App() {
+  const TIME = 30;
   const numberOfArrows = 10;
   const ARROWS = {
     38: uarr, 
@@ -18,13 +20,7 @@ function App() {
   const [arrows, setArrows] = useState([]);
   const [position, setPosition] = useState(0);
   const [score, setScore] = useState(0);
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
+  const [isRunning, setIsRunning] = useState(false);
 
   const arrowsRef = useRef(arrows);
   const setNewArrowsState = (data) => {
@@ -41,6 +37,38 @@ function App() {
     scoreRef.current = data;
     setScore(data);
   };
+  const isRunningRef = useRef(isRunning);
+  const setNewIsRunningState = (data) => {
+    isRunningRef.current = data;
+    setIsRunning(data);
+  };
+
+  const {
+    seconds,
+    start,
+    pause,
+    reset,
+  } = useStopwatch({ autoStart: false });
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (seconds >= TIME) {
+      pause();
+      setNewIsRunningState(false);
+      setTimeout(() => {
+        setNewArrowsState([]);
+        setNewPositionState(0);
+        setNewscoreState(0);
+        reset(undefined, false);
+      }, 5000)
+    }
+  }, [seconds]);
 
   const generateArrows = () => {
     const newArrows = [];
@@ -60,15 +88,21 @@ function App() {
     const doneRow = (positionRef.current === (numberOfArrows - 1) && arrowsRef.current[positionRef.current] === keyToArrow);
     if (arrowsRef.current.length === 0 || doneRow) {
       //either starting the game or has finished a row
-      if (doneRow) {
+      if (!isRunningRef.current && arrowsRef.current.length === 0) {
+        //start
+        start();
+        setNewIsRunningState(true);
+      }
+      if (isRunningRef.current && doneRow) {
+        //done row
         setNewPositionState(0);
         setNewscoreState(scoreRef.current + 10);
       }
       generateArrows();
       return;
     }
-    if (arrowsRef.current[positionRef.current] === keyToArrow) {
-      // match 
+    if (isRunningRef.current && arrowsRef.current[positionRef.current] === keyToArrow) {
+      //match 
       setNewPositionState(positionRef.current + 1);
     } else {
       setNewPositionState(0);
@@ -77,34 +111,42 @@ function App() {
 
   return (
     <div className="App">
-      <div className='Content'>
+      <div>
         {arrows.length === 0 ? (
           <div>
             Press any arrow key to start!
           </div>
         ) : (
-          <div>
-            Score: {score}
-          </div>
+          <>
+            <div>Score: {score}</div>
+            <div>Time: {TIME - seconds}</div>
+          </>
         )}
       </div>
       <div className="Container">
-        {arrows.map((arrow, index) => (
-          <img 
-            key={index}
-            src={arrow}
-            alt="arrow"
-            style={{
-              height: 'auto', 
-              width: '100px', 
-              marginRight: '10px', 
-              visibility: position > index ? 'hidden' : '', 
-              opacity: position > index ? 0 : '', 
-              transition: position > index ? 'transform 0.25s, visibility 0s 0.25s, opacity 0.25s linear' : '',
-              transform: position > index ? 'scale(1.5)' : ''
-            }} 
-          />
-        ))}
+        {!isRunning && arrows.length !== 0 ? (
+            <div>
+              Game over!
+            </div>
+          ) : (
+            arrows.map((arrow, index) => (
+              <img 
+                key={index}
+                src={arrow}
+                alt="arrow"
+                style={{
+                  height: 'auto', 
+                  width: '100px', 
+                  marginRight: '10px', 
+                  visibility: position > index ? 'hidden' : '', 
+                  opacity: position > index ? 0 : '', 
+                  transition: position > index ? 'transform 0.25s, visibility 0s 0.25s, opacity 0.25s linear' : '',
+                  transform: position > index ? 'scale(1.5)' : ''
+                }} 
+              />
+            ))
+          )
+        }
       </div>
     </div>
   );
